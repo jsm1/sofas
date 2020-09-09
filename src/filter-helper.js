@@ -169,4 +169,38 @@ module.exports = {
         }
         loadingEl.style.display = isLoading ? 'block' : '' 
     },
+
+    initPaginationButtons() {
+        const buttonHTML = `
+            <a href="#" class="w-pagination-previous button-2 next-prev prev pagination-button pagination-button__prev">
+                <svg class="w-pagination-previous-icon" height="12px" width="12px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" transform="translate(0, 1)"><path fill="none" stroke="currentColor" fill-rule="evenodd" d="M8 10L4 6l4-4"></path>
+                </svg>
+                <div class="w-inline-block">Vorherige Seite</div>
+            </a>
+            <a href="#" class="w-pagination-next button-2 next-prev pagination-button pagination-button__next">
+                <div class="w-inline-block">Nächste Seite</div>
+                <svg class="w-pagination-next-icon" height="12px" width="12px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" transform="translate(0, 1)"><path fill="none" stroke="currentColor" fill-rule="evenodd" d="M4 2l4 4-4 4"></path>
+                </svg>
+            </a>`
+        const paginationWrapperEl = document.querySelector(this.paginationWrapperSelector)
+        paginationWrapperEl.innerHTML = buttonHTML
+        this.addEventListenerToSelector('.pagination-button__prev', 'click', this.prevPageClick)
+        this.addEventListenerToSelector('.pagination-button__next', 'click', this.nextPageClick)
+    },
+
+    togglePrevPageVisibility() {
+        if (mixer.getState().activePagination.page === 1) {
+            document.querySelector('.pagination-button__prev').style.display = 'none'
+        } else {
+            document.querySelector('.pagination-button__prev').style.display = 'block'
+        }
+    },
+
+    prevPageClick() {
+        window.mixer.prevPage()
+    },
+
+    nextPageClick() {
+        window.mixer.nextPage()
+    },
 }

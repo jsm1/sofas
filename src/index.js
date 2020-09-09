@@ -27,6 +27,7 @@ window.addEventListener('load', function() {
         priceBucketSelector: '[data-iso-filter-name="price"] .dd-filter-item:not(.price-range-item)',
         priceAttribute: 'data-iso-price',
         loaderSelector: '.filters-loading',
+        paginationWrapperSelector: '.pagination-wrapper',
     })
 
     pageBuster.getPages()
@@ -34,6 +35,8 @@ window.addEventListener('load', function() {
             pageBuster.addProductsToPage()
             pageBuster.addDataAttributeClasses()
             filterHelper.initPriceBuckets()
+            // document.querySelector('.pagination-wrapper').classList.add('mixitup-page-list')
+            filterHelper.initPaginationButtons()
             window.mixer = mixitup(document.querySelector('.category-product-list'), {
                 selectors: {
                     target: '.category-product-list > .tiles-section > div[role="listitem"]',
@@ -41,6 +44,9 @@ window.addEventListener('load', function() {
                 multifilter: {
                     enable: true,
                     parseOn: 'submit',
+                },
+                pagination: {
+                    limit: 25,
                 },
                 callbacks: {
                     onMixStart() {
@@ -51,9 +57,14 @@ window.addEventListener('load', function() {
                         console.log('Filtering ended')
                         window.requestAnimationFrame(() => filterHelper.setLoading(false))
                     },
+                    onPaginateEnd() {
+                        filterHelper.togglePrevPageVisibility()
+                        window.scrollTo(0, 0)
+                    },
                 }
             })
             filterHelper.getFilterState()
+            filterHelper.togglePrevPageVisibility()
         })
 })
 
