@@ -1,11 +1,13 @@
 import 'regenerator-runtime/runtime.js'
-import '../lib/mixitup.min.js'
-import '../lib/mixitup-pagination.min.js'
-import '../lib/mixitup-multifilter.min.js'
+import mixitup from '../lib/mixitup'
+import mixitupPagination from '../lib/mixitup-pagination'
+import mixitupMultifilter from '../lib/mixitup-multifilter'
+
+mixitup.use(mixitupPagination)
+mixitup.use(mixitupMultifilter)
 
 import pageBuster from './page-buster'
 import filterHelper from './filter-helper'
-
 window.addEventListener('load', function() {
     pageBuster.init({
         chunkSize: 10,
