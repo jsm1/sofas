@@ -1,6 +1,7 @@
-require('../lib/mixitup.min.js')
-require('../lib/mixitup-pagination.min.js')
-require('../lib/mixitup-multifilter.min.js')
+import 'regenerator-runtime/runtime.js'
+import '../lib/mixitup.min.js'
+import '../lib/mixitup-pagination.min.js'
+import '../lib/mixitup-multifilter.min.js'
 
 import pageBuster from './page-buster'
 import filterHelper from './filter-helper'
