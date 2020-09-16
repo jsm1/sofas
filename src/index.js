@@ -22,6 +22,8 @@ window.addEventListener('load', function() {
         filterButtonSelector: '.button-2.reset.w-button',
         activeFilterWrapper: '.active-filter-tags',
         filterNameAttribute: 'data-iso-filter-name',
+        filterToggleTrueAttribute: 'data-iso-filter-true-value',
+        filterToggleFalseAttribute: 'data-iso-filter-false-value',
         filterAttributePrefix: 'data-iso',
         filterToggleSwitchSelector: '.filter-switches input',
         priceBucketSelector: '[data-iso-filter-name="price"] .dd-filter-item:not(.price-range-item)',
@@ -56,9 +58,10 @@ window.addEventListener('load', function() {
                     onMixEnd() {
                         console.log('Filtering ended')
                         window.requestAnimationFrame(() => filterHelper.setLoading(false))
+                        filterHelper.setPageNavigationVisibility()
                     },
                     onPaginateEnd() {
-                        filterHelper.togglePrevPageVisibility()
+                        filterHelper.setPageNavigationVisibility()
                         window.scrollTo(0, 0)
                     },
                 }

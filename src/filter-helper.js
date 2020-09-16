@@ -4,7 +4,7 @@ module.exports = {
         this.addFilterGroupTag()
         this.addEventListenerToSelector(this.filterButtonSelector, 'click', this.onFilterClick)
         this.addEventListenerToSelector(this.filterToggleSwitchSelector, 'click', this.onFilterClick)
-        
+        this.addEventListenerToSelector(this.getFilterInputSelector(), 'click', this.onFilterInputChange)
     },
 
     addEventListenerToSelector(selector, event, func) {
@@ -33,18 +33,20 @@ module.exports = {
         const uncheckedFilterToggleSwitches = [...document.querySelectorAll(this.filterToggleSwitchSelector + ':not(:checked)')]
         for (const toggle of checkedFilterToggleSwitches) {
             const filterName = toggle.getAttribute(this.filterNameAttribute)
+            const trueValue = toggle.getAttribute(this.filterToggleTrueAttribute) || true
             if (!filterName) {
                 continue
             }
-            filters[filterName] = true
+            filters[filterName] = trueValue
         }
 
         for (const toggle of uncheckedFilterToggleSwitches) {
             const filterName = toggle.getAttribute(this.filterNameAttribute)
+            const falseValue = toggle.getAttribute(this.filterToggleFalseAttribute) || false
             if (!filterName) {
                 continue
             }
-            filters[filterName] = false
+            filters[filterName] = falseValue
         }
 
         console.log('Filter state', filters)
@@ -92,7 +94,17 @@ module.exports = {
         if (matching) {
             matching.parentNode.click()
             this.getFilterState()
+        } else {
+            this.getFilterState()
         }
+    },
+
+    onFilterInputChange() {
+        this.getFilterState()
+    },
+
+    getFilterInputSelector() {
+        return `${this.filterListSelector} ${this.filterItemSelector} input`
     },
 
     addFilterGroupTag() {
@@ -109,6 +121,9 @@ module.exports = {
                 window.mixer.setFilterGroupSelectors(filterName, [this.getFilterAsSelector(filterName, 'true'), this.getFilterAsSelector(filterName, 'yes')])
             } else if (filterValues === false) {
                 window.mixer.setFilterGroupSelectors(filterName, null)
+            } else if (typeof filterValues === 'string') {
+                // Has custom true or false attribute set
+                window.mixer.setFilterGroupSelectors(filterName, this.getFilterAsSelector(filterName, filterValues))
             } else {
                 window.mixer.setFilterGroupSelectors(filterName, filterValues.map(f => this.getFilterAsSelector(filterName, f)))
             }
@@ -196,11 +211,25 @@ module.exports = {
         }
     },
 
+    toggleNextPageVisibility() {
+        const state = mixer.getState();
+        if (state.activePagination.page === state.totalPages) {
+            document.querySelector('.pagination-button__next').style.display = 'none'
+        } else {
+            document.querySelector('.pagination-button__next').style.display = 'block'
+        }
+    },
+
+    setPageNavigationVisibility() {
+        this.togglePrevPageVisibility()
+        this.toggleNextPageVisibility()
+    },
+
     prevPageClick() {
-        window.mixer.prevPage()
+        window.mixer.paginate('prev', false)
     },
 
     nextPageClick() {
-        window.mixer.nextPage()
+        window.mixer.nextPage('next', false)
     },
 }
