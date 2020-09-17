@@ -1,6 +1,7 @@
 module.exports = {
     init(config) {
         Object.assign(this, config)
+        this.storeOriginalItemValues()
         this.addFilterGroupTag()
         this.addEventListenerToSelector(this.filterButtonSelector, 'click', this.onFilterClick)
         this.addEventListenerToSelector(this.filterToggleSwitchSelector, 'click', this.onFilterClick)
@@ -17,6 +18,13 @@ module.exports = {
         requestAnimationFrame(this.getFilterState.bind(this))
     },
 
+    storeOriginalItemValues() {
+        [...document.querySelectorAll(this.filterItemSelector)].forEach((item) => {
+            const text = item.innerText
+            item.querySelector('input').setAttribute(this.filterItemValueAttribute, text)
+        });
+    },
+
     getFilterState() {
         this.setLoading(true)
         const filters = {}
@@ -24,7 +32,7 @@ module.exports = {
         for (const list of filterLists) {
             const filterName = list.getAttribute(this.filterNameAttribute)
             const selectedItems = [...list.querySelectorAll(this.getSelectedItemSelector())]
-            const itemText = selectedItems.map(i => i.parentNode.textContent)
+            const itemText = selectedItems.map(i => i.getAttribute(this.filterItemValueAttribute))
             filters[filterName] = itemText
         }
 
@@ -74,6 +82,13 @@ module.exports = {
         for (const tag of filterTags) {
             tagWrapper.appendChild(tag)
         }
+
+        const filterContainer = document.querySelector(this.activeFilterContainer)
+        if (!filterTags.length) {
+            filterContainer.style.display = 'none';
+        } else {
+            filterContainer.style.display = 'block';
+        }
     },
 
     getFilterTagHTML(filter) {
@@ -90,7 +105,7 @@ module.exports = {
 
     onDeselectFilter(filterName, filterValue) {
         const items = Array.from(document.querySelectorAll(`${this.filterListSelector}[${this.filterNameAttribute}="${filterName}"] ${this.getSelectedItemSelector()}`))
-        const matching = items.find(i => i.parentNode.textContent === filterValue)
+        const matching = items.find(i => i.getAttribute(this.filterItemValueAttribute) === filterValue)
         if (matching) {
             matching.parentNode.click()
             this.getFilterState()
@@ -221,6 +236,7 @@ module.exports = {
     },
 
     setPageNavigationVisibility() {
+        return;
         this.togglePrevPageVisibility()
         this.toggleNextPageVisibility()
     },
