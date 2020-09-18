@@ -16,7 +16,9 @@ window.addEventListener('load', function() {
         chunkSize: 10,
         productSelector: '.category-product-list > .tiles-section > div[role="listitem"]',
         filterTagsSelector: '.filter-tags > div',
-        nextPageSelector: 'a.w-pagination-next'
+        nextPageSelector: 'a.w-pagination-next',
+        tileLinkAttribute: 'data-tile-link',
+        linkSelector: 'a.tile',
     })
 
     filterHelper.init({
@@ -48,6 +50,7 @@ window.addEventListener('load', function() {
         .then(() => {
             pageBuster.addProductsToPage()
             pageBuster.addDataAttributeClasses()
+            pageBuster.setTileLinks()
             filterHelper.initPriceBuckets()
             // document.querySelector('.pagination-wrapper').classList.add('mixitup-page-list')
             filterHelper.initPaginationButtons()

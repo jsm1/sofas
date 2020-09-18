@@ -76,4 +76,12 @@ module.exports = {
             }
         })
     },
+    setTileLinks() {
+        const products = [...document.querySelectorAll(this.productSelector)]
+        products.forEach(product => {
+            const linkData = product.getAttribute(this.tileLinkAttribute)
+            const linkEl = product.querySelector(this.linkSelector)
+            linkEl.href = linkEl + linkData
+        })
+    },
 }
