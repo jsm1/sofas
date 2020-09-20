@@ -1,3 +1,6 @@
+const ORIGINAL_PRICE_ATTRIBUTE = 'data-iso-original-price'
+const CUSTOM_PRICE_FILTER_NAME = 'custom-price-range'
+const CUSTOM_PRICE_RANGE_FILTER_ATTRIBUTE = `data-iso-${CUSTOM_PRICE_FILTER_NAME}`
 module.exports = {
     init(config) {
         Object.assign(this, config)
@@ -6,6 +9,10 @@ module.exports = {
         this.addEventListenerToSelector(this.filterButtonSelector, 'click', this.onFilterClick)
         this.addEventListenerToSelector(this.filterToggleSwitchSelector, 'click', this.onFilterClick)
         this.addEventListenerToSelector(this.getFilterInputSelector(), 'click', this.onFilterInputChange)
+        this.addEventListenerToSelector(this.minPriceInputSelector, 'change', this.onCustomPriceRangeChange)
+        this.addEventListenerToSelector(this.maxPriceInputSelector, 'change', this.onCustomPriceRangeChange)
+
+        this.priceFormatter = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' })
     },
 
     addEventListenerToSelector(selector, event, func) {
@@ -57,6 +64,14 @@ module.exports = {
             filters[filterName] = falseValue
         }
 
+        // Custom price range filters
+        const [ minPrice, maxPrice ] = this.getCustomPriceRange()
+        if (minPrice !== undefined || maxPrice !== undefined) {
+            this.addCustomPriceRangeToFilterState(filters, minPrice, maxPrice)
+        } else {
+            filters[CUSTOM_PRICE_FILTER_NAME] = false
+        }
+
         console.log('Filter state', filters)
         this.displayFilterTags(filters)
         this.applyFilterState(filters)
@@ -78,13 +93,14 @@ module.exports = {
         }
 
         const tagWrapper = document.querySelector(this.activeFilterWrapper)
+        const combinedTags = [...filterTags, ...this.getCustomPriceRangeFilterTags()]
         tagWrapper.innerHTML = ''
-        for (const tag of filterTags) {
+        for (const tag of combinedTags) {
             tagWrapper.appendChild(tag)
         }
 
         const filterContainer = document.querySelector(this.activeFilterContainer)
-        if (!filterTags.length) {
+        if (!combinedTags.length) {
             filterContainer.style.display = 'none';
         } else {
             filterContainer.style.display = 'block';
@@ -103,6 +119,32 @@ module.exports = {
         return div
     },
 
+    getCustomPriceRangeFilterTags() {
+        const priceTags = []
+        const [minPrice, maxPrice] = this.getCustomPriceRange()
+        if (minPrice !== undefined) {
+            priceTags.push(this.getCustomPriceFilterTag('min', minPrice))
+        }
+
+        if (maxPrice !== undefined) {
+            priceTags.push(this.getCustomPriceFilterTag('max', maxPrice))
+        }
+
+        return priceTags
+    },
+
+    getCustomPriceFilterTag(type, price) {
+        const div = document.createElement('div')
+        div.classList.add('active-filter-cloud')
+        div.innerHTML = `<a href="#" class="active-filter-link w-inline-block"><div>${type} ${this.getPriceString(price)}</div></a></div>`
+        div.addEventListener('click', () => this.onDeselectCustomPriceFilter(type))
+        return div
+    },
+
+    getPriceString(price) {
+        return this.priceFormatter.format(price)
+    },
+
     onDeselectFilter(filterName, filterValue) {
         const items = Array.from(document.querySelectorAll(`${this.filterListSelector}[${this.filterNameAttribute}="${filterName}"] ${this.getSelectedItemSelector()}`))
         const matching = items.find(i => i.getAttribute(this.filterItemValueAttribute) === filterValue)
@@ -110,6 +152,19 @@ module.exports = {
             matching.parentNode.click()
             this.getFilterState()
         } else {
+            this.getFilterState()
+        }
+    },
+
+    onDeselectCustomPriceFilter(type) {
+        let selector = null
+        if (type === 'min') {
+            selector = this.minPriceInputSelector
+        } else if (type === 'max') {
+            selector = this.maxPriceInputSelector
+        }
+        if (selector) {
+            document.querySelector(selector).value = null
             this.getFilterState()
         }
     },
@@ -124,7 +179,12 @@ module.exports = {
 
     addFilterGroupTag() {
         const filters = [...document.querySelectorAll(`[${this.filterNameAttribute}]`)]
-        filters.forEach(f => f.innerHTML += `<div style="display: none;" data-filter-group="${f.getAttribute(this.filterNameAttribute)}"></div>`)
+        filters.forEach(f => f.innerHTML += this.getFilterGroupElString(f.getAttribute(this.filterNameAttribute)))
+        document.querySelector(this.minPriceInputSelector).innerHTML += this.getFilterGroupElString(CUSTOM_PRICE_FILTER_NAME)
+    },
+
+    getFilterGroupElString(filterName) {
+        return `<div style="display: none;" data-filter-group="${filterName}"></div>`
     },
 
     applyFilterState(state) {
@@ -178,6 +238,7 @@ module.exports = {
         const products = [...document.querySelectorAll(`[${this.priceAttribute}]`)]
         products.forEach(product => {
             const price = product.getAttribute(this.priceAttribute)
+            product.setAttribute(ORIGINAL_PRICE_ATTRIBUTE, price)
             product.setAttribute(this.priceAttribute, this.getBucketForPrice(price))
         })
     },
@@ -247,5 +308,42 @@ module.exports = {
 
     nextPageClick() {
         window.mixer.nextPage('next', false)
+    },
+
+    // Custom price range functions
+    onCustomPriceRangeChange() {
+        this.getFilterState()
+    },
+
+    getCustomPriceRange() {
+        const [ minPriceEl, maxPriceEl ] = [document.querySelector(this.minPriceInputSelector), document.querySelector(this.maxPriceInputSelector)]
+        let minPrice = parseFloat(minPriceEl.value)
+        let maxPrice = parseFloat(maxPriceEl.value)
+        if (Number.isNaN(minPrice)) {
+            minPrice = undefined
+        } else {
+            minPrice = Math.round(minPrice)
+        }
+        if (Number.isNaN(maxPrice)) {
+            maxPrice = undefined
+        } else {
+            maxPrice = Math.round(maxPrice)
+        }
+        return [ minPrice, maxPrice ]
+    },
+
+    addCustomPriceRangeToFilterState(filters, minPrice, maxPrice) {
+        const items = [...document.querySelectorAll('[' + ORIGINAL_PRICE_ATTRIBUTE + ']')]
+        items.forEach(item => {
+          let itemPrice = parseFloat(item.getAttribute(ORIGINAL_PRICE_ATTRIBUTE))
+          if (Number.isNaN(itemPrice)) {
+              return
+          }
+          itemPrice = Math.round(itemPrice)
+          const includedInMinPrice = minPrice === undefined || itemPrice >= minPrice
+          const includedInMaxPrice = maxPrice === undefined || itemPrice <= maxPrice
+          item.setAttribute(CUSTOM_PRICE_RANGE_FILTER_ATTRIBUTE, includedInMinPrice && includedInMaxPrice)
+        })
+        filters[CUSTOM_PRICE_FILTER_NAME] = true
     },
 }

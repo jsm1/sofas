@@ -35,6 +35,8 @@ window.addEventListener('load', function() {
         filterToggleSwitchSelector: '.filter-switches input',
         priceBucketSelector: '[data-iso-filter-name="price"] .dd-filter-item:not(.price-range-item)',
         priceAttribute: 'data-iso-price',
+        minPriceInputSelector: '.price-field-wrapper [name="min"]',
+        maxPriceInputSelector: '.price-field-wrapper [name="Max"]',
         loaderSelector: '.filters-loading',
         paginationWrapperSelector: '.pagination-wrapper',
     })
