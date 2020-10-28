@@ -46,7 +46,12 @@ window.addEventListener('load', function() {
         searchInputSelector: '#search',
     })
 
-
+    const pageSizeElement = document.querySelector('[data-page-size]')
+    let pageSize = 25
+    if (pageSizeElement) {
+        const parsed = parseInt(pageSizeElement.getAttribute('data-page-size'))
+        pageSize = parsed || pageSize
+    }
 
     pageBuster.getPages()
         .then(() => {
@@ -66,7 +71,7 @@ window.addEventListener('load', function() {
                     parseOn: 'submit',
                 },
                 pagination: {
-                    limit: 25,
+                    limit: pageSize,
                     generatePageList: true,
                 },
                 animation: {
